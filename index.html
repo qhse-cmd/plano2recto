@@ -3,20 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ArchiSketch 2D CAD — Editor de Planos Arquitectónicos</title>
+  <title>ArchiSketch 2D CAD — Editor de Planos</title>
   <style>
-    :root {
-      --bg-dark: #181a1f;
-      --panel-bg: #21252b;
-      --panel-border: #323842;
-      --text-main: #e6e8ec;
-      --text-muted: #9da5b4;
-      --accent: #3b82f6;
-      --accent-hover: #2563eb;
-      --success: #10b981;
-      --danger: #ef4444;
-    }
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -24,11 +12,11 @@
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      background-color: var(--bg-dark);
-      color: var(--text-main);
+    body {
+      background-color: #181a1f;
+      color: #e6e8ec;
+      height: 100vh;
+      width: 100vw;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -36,29 +24,29 @@
     }
 
     header {
-      background-color: var(--panel-bg);
-      border-bottom: 1px solid var(--panel-border);
+      background-color: #21252b;
+      border-bottom: 1px solid #323842;
       padding: 8px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
       flex-wrap: wrap;
-      z-index: 10;
+      flex-shrink: 0;
     }
 
     .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
       font-weight: 700;
       font-size: 15px;
       color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .brand span {
-      background: var(--accent);
-      color: white;
+      background: #3b82f6;
+      color: #fff;
       padding: 2px 6px;
       border-radius: 4px;
       font-size: 11px;
@@ -73,52 +61,49 @@
 
     button, select, input[type="number"], input[type="text"] {
       background: #2c313a;
-      color: var(--text-main);
+      color: #e6e8ec;
       border: 1px solid #3e4451;
       border-radius: 6px;
       padding: 6px 10px;
       font-size: 12px;
       cursor: pointer;
-      transition: all 0.15s ease;
     }
 
     button:hover {
       background: #383e4a;
-      border-color: #525a6b;
     }
 
     button.active {
-      background: var(--accent);
-      border-color: var(--accent);
+      background: #3b82f6;
+      border-color: #3b82f6;
       color: #fff;
       font-weight: 600;
     }
 
     button.ortho-active {
-      background: var(--success);
-      border-color: var(--success);
+      background: #10b981;
+      border-color: #10b981;
       color: #fff;
       font-weight: 600;
     }
 
     button.danger:hover {
-      background: var(--danger);
-      border-color: var(--danger);
+      background: #ef4444;
+      border-color: #ef4444;
       color: #fff;
     }
 
     .workspace {
       display: flex;
       flex: 1;
-      min-height: 0;
+      height: calc(100vh - 76px);
       overflow: hidden;
-      position: relative;
     }
 
     .sidebar-left {
-      width: 215px;
-      background: var(--panel-bg);
-      border-right: 1px solid var(--panel-border);
+      width: 210px;
+      background: #21252b;
+      border-right: 1px solid #323842;
       padding: 10px;
       display: flex;
       flex-direction: column;
@@ -130,8 +115,8 @@
     .section-title {
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      color: #9da5b4;
       margin-bottom: 6px;
       font-weight: 700;
     }
@@ -149,36 +134,31 @@
       justify-content: center;
       gap: 4px;
       padding: 8px 4px;
-      text-align: center;
       font-size: 11px;
     }
 
     .canvas-container {
       flex: 1;
-      min-width: 0;
-      min-height: 0;
       position: relative;
-      background: #ffffff;
+      background: #f8fafc;
       overflow: hidden;
       cursor: crosshair;
-      touch-action: none;
     }
 
     canvas {
       display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
+      width: 100%;
+      height: 100%;
     }
 
     .sidebar-right {
-      width: 245px;
-      background: var(--panel-bg);
-      border-left: 1px solid var(--panel-border);
+      width: 240px;
+      background: #21252b;
+      border-left: 1px solid #323842;
       padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       overflow-y: auto;
       flex-shrink: 0;
     }
@@ -192,7 +172,7 @@
 
     .prop-row label {
       font-size: 11px;
-      color: var(--text-muted);
+      color: #9da5b4;
     }
 
     .prop-row input {
@@ -204,7 +184,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 200px;
+      max-height: 180px;
       overflow-y: auto;
     }
 
@@ -228,14 +208,15 @@
     }
 
     footer {
-      background: var(--panel-bg);
-      border-top: 1px solid var(--panel-border);
+      background: #21252b;
+      border-top: 1px solid #323842;
       padding: 5px 14px;
       font-size: 11px;
-      color: var(--text-muted);
+      color: #9da5b4;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
 
     .floating-hint {
@@ -248,7 +229,6 @@
       border-radius: 6px;
       font-size: 11px;
       pointer-events: none;
-      z-index: 5;
     }
   </style>
 </head>
@@ -260,11 +240,11 @@
     </div>
 
     <div class="toolbar-group">
-      <button id="btn-ortho" class="ortho-active" title="Bloquea líneas a 0° y 90° (Atajo: F8)">📏 Ortho 90°: ON</button>
-      <button id="btn-snap" class="active" title="Ajustar a cuadrícula y esquinas">🧲 Imán: ON</button>
-      <button id="btn-grid" class="active" title="Mostrar u ocultar cuadrícula">🌐 Grilla</button>
-      <button id="btn-center" title="Centrar vista del plano">🎯 Centrar</button>
-      <select id="grid-size" title="Tamaño de paso de cuadrícula">
+      <button id="btn-ortho" class="ortho-active" onclick="toggleOrtho()">📏 Ortho 90°: ON</button>
+      <button id="btn-snap" class="active" onclick="toggleSnap()">🧲 Imán: ON</button>
+      <button id="btn-grid" class="active" onclick="toggleGrid()">🌐 Grilla</button>
+      <button onclick="centerView()">🎯 Centrar</button>
+      <select id="grid-size" onchange="changeGridStep(this.value)">
         <option value="0.1">Paso: 0.10 m</option>
         <option value="0.25">Paso: 0.25 m</option>
         <option value="0.5" selected>Paso: 0.50 m</option>
@@ -273,15 +253,15 @@
     </div>
 
     <div class="toolbar-group">
-      <button id="btn-undo" title="Deshacer (Ctrl+Z)">↩ Deshacer</button>
-      <button id="btn-redo" title="Rehacer (Ctrl+Y)">↪ Rehacer</button>
-      <button id="btn-upload-bg" title="Cargar imagen de boceto para calcar">🖼️ Calcar Boceto</button>
-      <input type="file" id="input-bg" accept="image/*" style="display:none" />
-      <button id="btn-save-json" title="Descargar proyecto editable">💾 Guardar JSON</button>
-      <button id="btn-load-json" title="Abrir proyecto guardado">📂 Abrir JSON</button>
-      <input type="file" id="input-json" accept=".json" style="display:none" />
-      <button id="btn-export-png" style="background: var(--accent); color: white; border-color: var(--accent);">📸 Exportar PNG</button>
-      <button id="btn-clear" class="danger" title="Borrar todo el plano">🗑️ Limpiar</button>
+      <button onclick="undo()">↩ Deshacer</button>
+      <button onclick="redo()">↪ Rehacer</button>
+      <button onclick="document.getElementById('input-bg').click()">🖼️ Calcar Boceto</button>
+      <input type="file" id="input-bg" accept="image/*" style="display:none" onchange="loadBgImage(event)" />
+      <button onclick="saveJSON()">💾 Guardar JSON</button>
+      <button onclick="document.getElementById('input-json').click()">📂 Abrir JSON</button>
+      <input type="file" id="input-json" accept=".json" style="display:none" onchange="loadJSON(event)" />
+      <button style="background:#3b82f6; color:#fff; border-color:#3b82f6;" onclick="exportPNG()">📸 Exportar PNG</button>
+      <button class="danger" onclick="clearAll()">🗑️ Limpiar</button>
     </div>
   </header>
 
@@ -290,72 +270,36 @@
       <div>
         <div class="section-title">Arquitectura</div>
         <div class="tool-grid">
-          <button class="tool-btn" data-tool="select">
-            <span>🖱️</span>
-            <span>Seleccionar</span>
-          </button>
-          <button class="tool-btn active" data-tool="wall">
-            <span>🧱</span>
-            <span>Pared / Muro</span>
-          </button>
-          <button class="tool-btn" data-tool="door">
-            <span>🚪</span>
-            <span>Puerta</span>
-          </button>
-          <button class="tool-btn" data-tool="window">
-            <span>🪟</span>
-            <span>Ventana</span>
-          </button>
+          <button class="tool-btn" id="tool-select" onclick="setTool('select')"><span>🖱️</span><span>Seleccionar</span></button>
+          <button class="tool-btn active" id="tool-wall" onclick="setTool('wall')"><span>🧱</span><span>Pared / Muro</span></button>
+          <button class="tool-btn" id="tool-door" onclick="setTool('door')"><span>🚪</span><span>Puerta</span></button>
+          <button class="tool-btn" id="tool-window" onclick="setTool('window')"><span>🪟</span><span>Ventana</span></button>
         </div>
       </div>
 
       <div>
         <div class="section-title">Anotaciones y Áreas</div>
         <div class="tool-grid">
-          <button class="tool-btn" data-tool="dimension">
-            <span>📐</span>
-            <span>Cota / Medida</span>
-          </button>
-          <button class="tool-btn" data-tool="text">
-            <span>🏷️</span>
-            <span>Etiqueta / Texto</span>
-          </button>
-          <button class="tool-btn" data-tool="area">
-            <span>⬛</span>
-            <span>Medir Área m²</span>
-          </button>
-          <button class="tool-btn" data-tool="pan">
-            <span>✋</span>
-            <span>Mover Vista</span>
-          </button>
+          <button class="tool-btn" id="tool-dimension" onclick="setTool('dimension')"><span>📐</span><span>Cota / Medida</span></button>
+          <button class="tool-btn" id="tool-text" onclick="setTool('text')"><span>🏷️</span><span>Etiqueta / Texto</span></button>
+          <button class="tool-btn" id="tool-area" onclick="setTool('area')"><span>⬛</span><span>Medir Área m²</span></button>
+          <button class="tool-btn" id="tool-pan" onclick="setTool('pan')"><span>✋</span><span>Mover Vista</span></button>
         </div>
       </div>
 
       <div>
         <div class="section-title">Señalización Seguridad</div>
         <div class="tool-grid">
-          <button class="tool-btn" data-tool="sig_elec">
-            <span>⚡</span>
-            <span>Tablero Eléctrico</span>
-          </button>
-          <button class="tool-btn" data-tool="sig_ext">
-            <span>🧯</span>
-            <span>Extintor</span>
-          </button>
-          <button class="tool-btn" data-tool="sig_light">
-            <span>🚨</span>
-            <span>Luz Emergencia</span>
-          </button>
-          <button class="tool-btn" data-tool="sig_smoke">
-            <span>💨</span>
-            <span>Detector Humo</span>
-          </button>
+          <button class="tool-btn" id="tool-sig_elec" onclick="setTool('sig_elec')"><span>⚡</span><span>Tablero Eléctrico</span></button>
+          <button class="tool-btn" id="tool-sig_ext" onclick="setTool('sig_ext')"><span>🧯</span><span>Extintor</span></button>
+          <button class="tool-btn" id="tool-sig_light" onclick="setTool('sig_light')"><span>🚨</span><span>Luz Emergencia</span></button>
+          <button class="tool-btn" id="tool-sig_smoke" onclick="setTool('sig_smoke')"><span>💨</span><span>Detector Humo</span></button>
         </div>
       </div>
     </aside>
 
     <main class="canvas-container" id="canvas-wrap">
-      <canvas id="cad-canvas" width="900" height="600"></canvas>
+      <canvas id="cad-canvas"></canvas>
       <div class="floating-hint" id="hint-box">
         Haz clic en el lienzo para iniciar pared recta (90°). Presiona <b>Esc</b> para soltar la línea.
       </div>
@@ -363,7 +307,7 @@
 
     <aside class="sidebar-right">
       <div>
-        <div class="section-title">Propiedades / Dibujo Exacto</div>
+        <div class="section-title">Propiedades</div>
         <div class="prop-row">
           <label>Grosor de muro (m):</label>
           <input type="number" id="wall-thickness" value="0.15" step="0.05" min="0.05" max="1.0" />
@@ -378,29 +322,29 @@
         </div>
       </div>
 
-      <div id="bg-controls" style="display:none; border-top: 1px solid var(--panel-border); padding-top: 10px;">
+      <div id="bg-controls" style="display:none; border-top: 1px solid #323842; padding-top: 10px;">
         <div class="section-title">Boceto de Referencia</div>
         <div class="prop-row">
-          <label>Opacidad de imagen:</label>
-          <input type="range" id="bg-opacity" min="0.1" max="1" step="0.05" value="0.4" />
+          <label>Opacidad:</label>
+          <input type="range" min="0.1" max="1" step="0.05" value="0.4" oninput="bgOpacity=parseFloat(this.value); draw();" />
         </div>
         <div class="prop-row">
-          <label>Escala de imagen (%):</label>
-          <input type="range" id="bg-scale" min="10" max="300" step="5" value="100" />
+          <label>Escala (%):</label>
+          <input type="range" min="10" max="300" step="5" value="100" oninput="bgScale=parseFloat(this.value)/100; draw();" />
         </div>
-        <button id="btn-remove-bg" class="danger" style="width:100%;">Quitar Boceto</button>
+        <button class="danger" style="width:100%;" onclick="bgImage=null; document.getElementById('bg-controls').style.display='none'; draw();">Quitar Boceto</button>
       </div>
 
-      <div id="selection-controls" style="display:none; border-top: 1px solid var(--panel-border); padding-top: 10px;">
+      <div id="selection-controls" style="display:none; border-top: 1px solid #323842; padding-top: 10px;">
         <div class="section-title">Elemento Seleccionado</div>
-        <button id="btn-rotate-sel" style="width:100%; margin-bottom:6px;">🔄 Rotar 90° (Tecla R)</button>
-        <button id="btn-delete-sel" class="danger" style="width:100%;">🗑️ Eliminar (Tecla Supr)</button>
+        <button style="width:100%; margin-bottom:6px;" onclick="rotateSelected()">🔄 Rotar 90° (Tecla R)</button>
+        <button class="danger" style="width:100%;" onclick="deleteSelected()">🗑️ Eliminar (Tecla Supr)</button>
       </div>
 
-      <div style="border-top: 1px solid var(--panel-border); padding-top: 10px;">
+      <div style="border-top: 1px solid #323842; padding-top: 10px;">
         <div class="section-title">Superficies Calculadas</div>
         <div class="area-list" id="area-list">
-          <div style="font-size:11px; color:var(--text-muted);">Usa "Medir Área m²" y haz clic en las esquinas de una habitación para calcular su superficie.</div>
+          <div style="font-size:11px; color:#9da5b4;">Usa "Medir Área m²" y haz clic en las esquinas de una habitación.</div>
         </div>
         <div style="margin-top:8px; font-size:12px; font-weight:700; display:flex; justify-content:space-between;">
           <span>Superficie Total:</span>
@@ -412,220 +356,100 @@
 
   <footer>
     <div id="coords-display">X: 0.00 m | Y: 0.00 m</div>
-    <div>Rueda del ratón: Zoom | Clic central: Mover vista | F8: Ortho 90° | Esc: Soltar</div>
+    <div>Rueda: Zoom | Clic central: Mover | F8: Ortho 90° | Esc: Soltar</div>
   </footer>
 
   <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const canvas = document.getElementById('cad-canvas');
-      const ctx = canvas.getContext('2d');
-      const wrap = document.getElementById('canvas-wrap');
+    var canvas = document.getElementById('cad-canvas');
+    var ctx = canvas.getContext('2d');
+    var wrap = document.getElementById('canvas-wrap');
 
-      const PIXELS_PER_METER = 60;
-      let camera = { x: 100, y: 100, zoom: 1 };
-      let currentTool = 'wall';
-      let orthoMode = true;
-      let snapMode = true;
-      let showGrid = true;
-      let gridStepMeters = 0.5;
+    var PPM = 60; // Píxeles por metro
+    var camera = { x: 100, y: 80, zoom: 1 };
+    var currentTool = 'wall';
+    var orthoMode = true;
+    var snapMode = true;
+    var showGrid = true;
+    var gridStep = 0.5;
 
-      let elements = [
-        { id: 1, type: 'wall', x1: 0, y1: 0, x2: 6, y2: 0, thickness: 0.15 },
-        { id: 2, type: 'wall', x1: 6, y1: 0, x2: 6, y2: 4, thickness: 0.15 },
-        { id: 3, type: 'wall', x1: 6, y1: 4, x2: 0, y2: 4, thickness: 0.15 },
-        { id: 4, type: 'wall', x1: 0, y1: 4, x2: 0, y2: 0, thickness: 0.15 },
-        { id: 5, type: 'door', x1: 2.5, y1: 4, width: 0.9, angle: 0 },
-        { id: 6, type: 'window', x1: 2.0, y1: 0, width: 1.5, angle: 0 },
-        { id: 7, type: 'text', x1: 3.0, y1: 2.0, text: 'Estar - Comedor' }
-      ];
+    var elements = [
+      { id: 1, type: 'wall', x1: 0, y1: 0, x2: 6, y2: 0, thickness: 0.15 },
+      { id: 2, type: 'wall', x1: 6, y1: 0, x2: 6, y2: 4, thickness: 0.15 },
+      { id: 3, type: 'wall', x1: 6, y1: 4, x2: 0, y2: 4, thickness: 0.15 },
+      { id: 4, type: 'wall', x1: 0, y1: 4, x2: 0, y2: 0, thickness: 0.15 },
+      { id: 5, type: 'door', x1: 2.5, y1: 4, width: 0.9, angle: 0 },
+      { id: 6, type: 'window', x1: 2.0, y1: 0, width: 1.5, angle: 0 },
+      { id: 7, type: 'text', x1: 3.0, y1: 2.0, text: 'Estar - Comedor' }
+    ];
 
-      let history = [];
-      let redoStack = [];
-      let selectedId = null;
+    var historyList = [];
+    var redoList = [];
+    var selectedId = null;
+    var isDrawing = false;
+    var startPt = null;
+    var currentPt = null;
+    var areaPoints = [];
+    var isPanning = false;
+    var panStart = { x: 0, y: 0 };
+    var shiftPressed = false;
+    var bgImage = null;
+    var bgOpacity = 0.4;
+    var bgScale = 1.0;
 
-      let isDrawing = false;
-      let startPt = null;
-      let currentPt = null;
-      let areaPoints = [];
-      let isPanning = false;
-      let panStart = { x: 0, y: 0 };
-      let shiftPressed = false;
+    function resizeCanvas() {
+      canvas.width = wrap.clientWidth || (window.innerWidth - 450);
+      canvas.height = wrap.clientHeight || (window.innerHeight - 80);
+      draw();
+    }
 
-      let bgImage = null;
-      let bgOpacity = 0.4;
-      let bgScale = 1.0;
+    function toWorld(sx, sy) {
+      return {
+        x: (sx - camera.x) / (PPM * camera.zoom),
+        y: (sy - camera.y) / (PPM * camera.zoom)
+      };
+    }
 
-      function syncCanvasSize() {
-        const rect = wrap.getBoundingClientRect();
-        const w = Math.max(Math.floor(rect.width), 300);
-        const h = Math.max(Math.floor(rect.height), 300);
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width = w;
-          canvas.height = h;
-        }
-        render();
-      }
-
-      if (window.ResizeObserver) {
-        const ro = new ResizeObserver(() => syncCanvasSize());
-        ro.observe(wrap);
-      }
-      window.addEventListener('resize', syncCanvasSize);
-
-      function saveState() {
-        history.push(JSON.stringify(elements));
-        if (history.length > 50) history.shift();
-        redoStack = [];
-        updateAreaPanel();
-      }
-
-      function undo() {
-        if (history.length === 0) return;
-        redoStack.push(JSON.stringify(elements));
-        elements = JSON.parse(history.pop());
-        selectedId = null;
-        updateSelectionPanel();
-        updateAreaPanel();
-        render();
-      }
-
-      function redo() {
-        if (redoStack.length === 0) return;
-        history.push(JSON.stringify(elements));
-        elements = JSON.parse(redoStack.pop());
-        selectedId = null;
-        updateSelectionPanel();
-        updateAreaPanel();
-        render();
-      }
-
-      function screenToWorld(sx, sy) {
-        return {
-          x: (sx - camera.x) / (PIXELS_PER_METER * camera.zoom),
-          y: (sy - camera.y) / (PIXELS_PER_METER * camera.zoom)
-        };
-      }
-
-      function getSnappedPoint(rawWorld, referencePt = null) {
-        let pt = { x: rawWorld.x, y: rawWorld.y };
-        let snappedToVertex = false;
-
-        if (snapMode) {
-          const snapRadius = 0.25 / camera.zoom;
-          let minDist = snapRadius;
-          for (const el of elements) {
-            if (el.type === 'wall' || el.type === 'dimension') {
-              const pts = [{ x: el.x1, y: el.y1 }, { x: el.x2, y: el.y2 }];
-              for (const p of pts) {
-                const d = Math.hypot(rawWorld.x - p.x, rawWorld.y - p.y);
-                if (d < minDist) {
-                  minDist = d;
-                  pt = { x: p.x, y: p.y };
-                  snappedToVertex = true;
-                }
+    function getSnapped(raw, ref) {
+      var pt = { x: raw.x, y: raw.y, snapped: false };
+      if (snapMode) {
+        var minDist = 0.25 / camera.zoom;
+        for (var i = 0; i < elements.length; i++) {
+          var el = elements[i];
+          if (el.type === 'wall' || el.type === 'dimension') {
+            var endpoints = [{ x: el.x1, y: el.y1 }, { x: el.x2, y: el.y2 }];
+            for (var j = 0; j < endpoints.length; j++) {
+              var d = Math.hypot(raw.x - endpoints[j].x, raw.y - endpoints[j].y);
+              if (d < minDist) {
+                minDist = d;
+                pt.x = endpoints[j].x;
+                pt.y = endpoints[j].y;
+                pt.snapped = true;
               }
             }
           }
-
-          if (!snappedToVertex) {
-            pt.x = Math.round(pt.x / gridStepMeters) * gridStepMeters;
-            pt.y = Math.round(pt.y / gridStepMeters) * gridStepMeters;
-          }
         }
-
-        const activeOrtho = shiftPressed ? !orthoMode : orthoMode;
-        if (activeOrtho && referencePt) {
-          const dx = Math.abs(pt.x - referencePt.x);
-          const dy = Math.abs(pt.y - referencePt.y);
-          if (dx >= dy) {
-            pt.y = referencePt.y;
-          } else {
-            pt.x = referencePt.x;
-          }
+        if (!pt.snapped) {
+          pt.x = Math.round(pt.x / gridStep) * gridStep;
+          pt.y = Math.round(pt.y / gridStep) * gridStep;
         }
-
-        pt.snappedToVertex = snappedToVertex;
-        return pt;
       }
 
-      function calcPolygonArea(pts) {
-        let area = 0;
-        for (let i = 0; i < pts.length; i++) {
-          const j = (i + 1) % pts.length;
-          area += pts[i].x * pts[j].y;
-          area -= pts[j].x * pts[i].y;
+      var useOrtho = shiftPressed ? !orthoMode : orthoMode;
+      if (useOrtho && ref) {
+        if (Math.abs(pt.x - ref.x) >= Math.abs(pt.y - ref.y)) {
+          pt.y = ref.y;
+        } else {
+          pt.x = ref.x;
         }
-        return Math.abs(area / 2);
       }
+      return pt;
+    }
 
-      function render(targetCtx = ctx, isExport = false) {
-        const w = targetCtx.canvas.width;
-        const h = targetCtx.canvas.height;
+    function draw(targetCtx, isExport) {
+      var c = targetCtx || ctx;
+      var w = c.canvas.width;
+      var h = c.canvas.height;
 
-        targetCtx.fillStyle = '#ffffff';
-        targetCtx.fillRect(0, 0, w, h);
-
-        targetCtx.save();
-        targetCtx.translate(camera.x, camera.y);
-        targetCtx.scale(PIXELS_PER_METER * camera.zoom, PIXELS_PER_METER * camera.zoom);
-
-        if (bgImage) {
-          targetCtx.save();
-          targetCtx.globalAlpha = bgOpacity;
-          const imgW = (bgImage.width / PIXELS_PER_METER) * bgScale;
-          const imgH = (bgImage.height / PIXELS_PER_METER) * bgScale;
-          targetCtx.drawImage(bgImage, 0, 0, imgW, imgH);
-          targetCtx.restore();
-        }
-
-        if (showGrid && !isExport) {
-          drawGrid(targetCtx, w, h);
-        }
-
-        for (const el of elements) {
-          if (el.type === 'area') drawArea(targetCtx, el, el.id === selectedId && !isExport);
-        }
-
-        for (const el of elements) {
-          if (el.type === 'wall') drawWall(targetCtx, el, el.id === selectedId && !isExport);
-        }
-
-        for (const el of elements) {
-          if (el.type === 'door') drawDoor(targetCtx, el, el.id === selectedId && !isExport);
-          if (el.type === 'window') drawWindow(targetCtx, el, el.id === selectedId && !isExport);
-        }
-
-        for (const el of elements) {
-          if (el.type === 'dimension') drawDimension(targetCtx, el, el.id === selectedId && !isExport);
-          if (el.type === 'text') drawText(targetCtx, el, el.id === selectedId && !isExport);
-          if (el.type.startsWith('sig_')) drawSignal(targetCtx, el, el.id === selectedId && !isExport);
-        }
-
-        if (!isExport) {
-          if (isDrawing && startPt && currentPt) {
-            if (currentTool === 'wall') {
-              const thick = parseFloat(document.getElementById('wall-thickness').value) || 0.15;
-              drawWall(targetCtx, { x1: startPt.x, y1: startPt.y, x2: currentPt.x, y2: currentPt.y, thickness: thick }, false, true);
-            } else if (currentTool === 'dimension') {
-              drawDimension(targetCtx, { x1: startPt.x, y1: startPt.y, x2: currentPt.x, y2: currentPt.y }, false, true);
-            }
-          }
-
-          if (currentTool === 'area' && areaPoints.length > 0) {
-            targetCtx.save();
-            targetCtx.strokeStyle = '#10b981';
-            targetCtx.lineWidth = 2 / (PIXELS_PER_METER * camera.zoom);
-            targetCtx.setLineDash([0.1, 0.1]);
-            targetCtx.beginPath();
-            targetCtx.moveTo(areaPoints[0].x, areaPoints[0].y);
-            for (let i = 1; i < areaPoints.length; i++) {
-              targetCtx.lineTo(areaPoints[i].x, areaPoints[i].y);
-            }
-            if (currentPt) targetCtx.lineTo(currentPt.x, currentPt.y);
-            targetCtx.stroke();
-            targetCtx.restore();
-          }
-
-          if (currentPt) {
-            targetCtx.save();
-            targetCtx.fillStyle = currentPt.snappedToVertex ? '#10b981' : '#3
+      c.fillStyle = '#ffffff';
+      c.fillRect(0, 0, w,
+                 
