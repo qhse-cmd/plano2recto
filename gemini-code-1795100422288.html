@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArchiSketch 2D CAD — Editor de Planos Arquitectónicos</title>
+  <style>
+    :root {
+      --bg-dark: #181a1f;
+      --panel-bg: #21252b;
+      --panel-border: #323842;
+      --text-main: #e6e8ec;
+      --text-muted: #9da5b4;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Barra superior */
+    header {
+      background-color: var(--panel-bg);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    .brand span {
+      background: var(--accent);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    button, select, input[type="number"], input[type="text"] {
+      background: #2c313a;
+      color: var(--text-main);
+      border: 1px solid #3e4451;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      background: #383e4a;
+      border-color: #525a6b;
+    }
+
+    button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    button.ortho-active {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    button.danger:hover {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+
+    /* Layout principal */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Barra lateral izquierda de herramientas */
+    .sidebar-left {
+      width: 220px;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--panel-border);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .tool-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .tool-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Área del lienzo */
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Barra lateral derecha de propiedades y áreas */
+    .sidebar-right {
+      width: 250px;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--panel-border);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+    }
+
+    .prop-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .prop-row label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .prop-row input {
+      width: 100%;
+      cursor: text;
+    }
+
+    .area-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .area-item {
+      background: #282c34;
+      border: 1px solid #383e4a;
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .area-badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    /* Barra de estado inferior */
+    footer {
+      background: var(--panel-bg);
+      border-top: 1px solid var(--panel-border);
+      padding: 5px 14px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .floating-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(24, 26, 31, 0.88);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      📐 ArchiSketch <span>2D CAD</span>
+    </div>
+
+    <div class="toolbar-group">
+      <button id="btn-ortho" class="ortho-active" title="Bloquea líneas a 0° y 90° (Atajo: F8)">📏 Ortho 90°: ON</button>
+      <button id="btn-snap" class="active" title="Ajustar a cuadrícula y esquinas">🧲 Imán: ON</button>
+      <button id="btn-grid" class="active" title="Mostrar u ocultar cuadrícula">🌐 Grilla</button>
+      <select id="grid-size" title="Tamaño de paso de cuadrícula">
+        <option value="0.1">Paso: 0.10 m</option>
+        <option value="0.25">Paso: 0.25 m</option>
+        <option value="0.5" selected>Paso: 0.50 m</option>
+        <option value="1.0">Paso: 1.00 m</option>
+      </select>
+    </div>
+
+    <div class="toolbar-group">
+      <button id="btn-undo" title="Deshacer (Ctrl+Z)">↩ Deshacer</button>
+      <button id="btn-redo" title="Rehacer (Ctrl+Y)">↪ Rehacer</button>
+      <button id="btn-upload-bg" title="Cargar imagen de boceto para calcar">🖼️ Calcar Boceto</button>
+      <input type="file" id="input-bg" accept="image/*" style="display:none" />
+      <button id="btn-save-json" title="Descargar proyecto editable">💾 Guardar JSON</button>
+      <button id="btn-load-json" title="Abrir proyecto guardado">📂 Abrir JSON</button>
+      <input type="file" id="input-json" accept=".json" style="display:none" />
+      <button id="btn-export-png" style="background: var(--accent); color: white; border-color: var(--accent);">📸 Exportar Plano PNG</button>
+      <button id="btn-clear" class="danger" title="Borrar todo el plano">🗑️ Limpiar</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <!-- Panel izquierdo de herramientas -->
+    <aside class="sidebar-left">
+      <div>
+        <div class="section-title">Arquitectura</div>
+        <div class="tool-grid">
+          <button class="tool-btn" data-tool="select">
+            <span>🖱️</span>
+            <span>Seleccionar</span>
+          </button>
+          <button class="tool-btn active" data-tool="wall">
+            <span>🧱</span>
+            <span>Pared / Muro</span>
+          </button>
+          <button class="tool-btn" data-tool="door">
+            <span>🚪</span>
+            <span>Puerta</span>
+          </button>
+          <button class="tool-btn" data-tool="window">
+            <span>🪟</span>
+            <span>Ventana</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Anotaciones y Áreas</div>
+        <div class="tool-grid">
+          <button class="tool-btn" data-tool="dimension">
+            <span>📐</span>
+            <span>Cota / Medida</span>
+          </button>
+          <button class="tool-btn" data-tool="text">
+            <span>🏷️</span>
+            <span>Etiqueta / Texto</span>
+          </button>
+          <button class="tool-btn" data-tool="area">
+            <span>⬛</span>
+            <span>Medir Área m²</span>
+          </button>
+          <button class="tool-btn" data-tool="pan">
+            <span>✋</span>
+            <span>Mover Vista</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Señalización Seguridad</div>
+        <div class="tool-grid">
+          <button class="tool-btn" data-tool="sig_elec">
+            <span>⚡</span>
+            <span>Tablero Eléctrico</span>
+          </button>
+          <button class="tool-btn" data-tool="sig_ext">
+            <span>🧯</span>
+            <span>Extintor</span>
+          </button>
+          <button class="tool-btn" data-tool="sig_light">
+            <span>🚨</span>
+            <span>Luz Emergencia</span>
+          </button>
+          <button class="tool-btn" data-tool="sig_smoke">
+            <span>💨</span>
+            <span>Detector Humo</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Lienzo CAD -->
+    <main class="canvas-container" id="canvas-wrap">
+      <canvas id="cad-canvas"></canvas>
+      <div class="floating-hint" id="hint-box">
+        Haz clic para iniciar pared recta (90°). Mantén <b>Shift</b> para ángulo libre o <b>Esc</b> para soltar.
+      </div>
+    </main>
+
+    <!-- Panel derecho de propiedades -->
+    <aside class="sidebar-right">
+      <div>
+        <div class="section-title">Propiedades / Dibujo Exacto</div>
+        <div class="prop-row">
+          <label>Grosor de muro (m):</label>
+          <input type="number" id="wall-thickness" value="0.15" step="0.05" min="0.05" max="1.0" />
+        </div>
+        <div class="prop-row">
+          <label>Ancho puerta / ventana (m):</label>
+          <input type="number" id="opening-width" value="0.90" step="0.10" min="0.30" max="4.0" />
+        </div>
+        <div class="prop-row">
+          <label>Título del proyecto (para PNG):</label>
+          <input type="text" id="project-title" value="Plano de Vivienda - Planta Baja" />
+        </div>
+      </div>
+
+      <div id="bg-controls" style="display:none; border-top: 1px solid var(--panel-border); padding-top: 10px;">
+        <div class="section-title">Boceto de Referencia</div>
+        <div class="prop-row">
+          <label>Opacidad de imagen:</label>
+          <input type="range" id="bg-opacity" min="0.1" max="1" step="0.05" value="0.4" />
+        </div>
+        <div class="prop-row">
+          <label>Escala de imagen (%):</label>
+          <input type="range" id="bg-scale" min="10" max="300" step="5" value="100" />
+        </div>
+        <button id="btn-remove-bg" class="danger" style="width:100%;">Quitar Boceto</button>
+      </div>
+
+      <div id="selection-controls" style="display:none; border-top: 1px solid var(--panel-border); padding-top: 10px;">
+        <div class="section-title">Elemento Seleccionado</div>
+        <button id="btn-rotate-sel" style="width:100%; margin-bottom:6px;">🔄 Rotar 90° (Tecla R)</button>
+        <button id="btn-delete-sel" class="danger" style="width:100%;">🗑️ Eliminar (Tecla Supr)</button>
+      </div>
+
+      <div style="border-top: 1px solid var(--panel-border); padding-top: 10px;">
+        <div class="section-title">Superficies Calculadas</div>
+        <div class="area-list" id="area-list">
+          <div style="font-size:11px; color:var(--text-muted);">Usa "Medir Área m²" y haz clic en las esquinas de una habitación para calcular su superficie.</div>
+        </div>
+        <div style="margin-top:8px; font-size:12px; font-weight:700; display:flex; justify-content:space-between;">
+          <span>Superficie Total:</span>
+          <span id="total-area" style="color:#34d399;">0.00 m²</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div id="coords-display">X: 0.00 m | Y: 0.00 m</div>
+    <div>Rueda del ratón: Zoom | Clic central o Espacio+Arrastrar: Mover | F8: Ortho 90°</div>
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('cad-canvas');
+    const ctx = canvas.getContext('2d');
+    const wrap = document.getElementById('canvas-wrap');
+
+    // Estado de la aplicación
+    const PIXELS_PER_METER = 60; // Escala base: 60px = 1 metro
+    let camera = { x: 120, y: 120, zoom: 1 };
+    let currentTool = 'wall';
+    let orthoMode = true; // Líneas rectas 90° activado por defecto
+    let snapMode = true;
+    let showGrid = true;
+    let gridStepMeters = 0.5;
+
+    // Elementos del plano
+    let elements = []; // { id, type, x1, y1, x2, y2, thickness, width, angle, text, points }
+    let history = [];
+    let redoStack = [];
+    let selectedId = null;
+
+    // Estado de dibujo activo
+    let isDrawing = false;
+    let startPt = null;
+    let currentPt = null;
+    let areaPoints = [];
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
+    let shiftPressed = false;
+
+    // Imagen de fondo (boceto)
+    let bgImage = null;
+    let bgOpacity = 0.4;
+    let bgScale = 1.0;
+
+    // Inicializar tamaño de canvas
+    function resizeCanvas() {
+      canvas.width = wrap.clientWidth;
+      canvas.height = wrap.clientHeight;
+      render();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Guardar historial
+    function saveState() {
+      history.push(JSON.stringify(elements));
+      if (history.length > 50) history.shift();
+      redoStack = [];
+      updateAreaPanel();
+    }
+
+    function undo() {
+      if (history.length === 0) return;
+      redoStack.push(JSON.stringify(elements));
+      elements = JSON.parse(history.pop());
+      selectedId = null;
+      updateSelectionPanel();
+      updateAreaPanel();
+      render();
+    }
+
+    function redo() {
+      if (redoStack.length === 0) return;
+      history.push(JSON.stringify(elements));
+      elements = JSON.parse(redoStack.pop());
+      selectedId = null;
+      updateSelectionPanel();
+      updateAreaPanel();
+      render();
+    }
+
+    // Conversión de coordenadas Pantalla <-> Mundo (metros)
+    function screenToWorld(sx, sy) {
+      return {
+        x: (sx - camera.x) / (PIXELS_PER_METER * camera.zoom),
+        y: (sy - camera.y) / (PIXELS_PER_METER * camera.zoom)
+      };
+    }
+
+    function worldToScreen(wx, wy) {
+      return {
+        x: wx * PIXELS_PER_METER * camera.zoom + camera.x,
+        y: wy * PIXELS_PER_METER * camera.zoom + camera.y
+      };
+    }
+
+    // Obtener punto ajustado (Snap a vértices + Snap a cuadrícula)
+    function getSnappedPoint(rawWorld, referencePt = null) {
+      let pt = { x: rawWorld.x, y: rawWorld.y };
+      let snappedToVertex = false;
+
+      if (snapMode) {
+        // 1. Imán a extremos de muros/cotas existentes
+        const snapRadius = 0.22 / camera.zoom;
+        let minDist = snapRadius;
+        for (const el of elements) {
+          if (el.type === 'wall' || el.type === 'dimension') {
+            const pts = [{ x: el.x1, y: el.y1 }, { x: el.x2, y: el.y2 }];
+            for (const p of pts) {
+              const d = Math.hypot(rawWorld.x - p.x, rawWorld.y - p.y);
+              if (d < minDist) {
+                minDist = d;
+                pt = { x: p.x, y: p.y };
+                snappedToVertex = true;
+              }
+            }
+          }
+        }
+
+        // 2. Si no se enganchó a un vértice, ajustar a cuadrícula
+        if (!snappedToVertex) {
+          pt.x = Math.round(pt.x / gridStepMeters) * gridStepMeters;
+          pt.y = Math.round(pt.y / gridStepMeters) * gridStepMeters;
+        }
+      }
+
+      // 3. Bloqueo ortogonal (90°) respecto al punto inicial
+      const activeOrtho = shiftPressed ? !orthoMode : orthoMode;
+      if (activeOrtho && referencePt) {
+        const dx = Math.abs(pt.x - referencePt.x);
+        const dy = Math.abs(pt.y - referencePt.y);
+        if (dx >= dy) {
+          pt.y = referencePt.y;
+        } else {
+          pt.x = referencePt.x;
+        }
+      }
+
+      pt.snappedToVertex = snappedToVertex;
+      return pt;
+    }
+
+    // Cálculo de área de polígono (Fórmula de Shoelace)
+    function calcPolygonArea(pts) {
+      let area = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const j = (i + 1) % pts.length;
+        area += pts[i].x * pts[j].y;
+        area -= pts[j].x * pts[i].y;
+      }
+      return Math.abs(area / 2);
+    }
+
+    // Renderizado principal
+    function render(targetCtx = ctx, isExport = false) {
+      const w = targetCtx.canvas.width;
+      const h = targetCtx.canvas.height;
+
+      // Fondo blanco
+      targetCtx.fillStyle = '#ffffff';
+      targetCtx.fillRect(0, 0, w, h);
+
+      targetCtx.save();
+      targetCtx.translate(camera.x, camera.y);
+      targetCtx.scale(PIXELS_PER_METER * camera.zoom, PIXELS_PER_METER * camera.zoom);
+
+      // 1. Dibujar boceto de referencia si existe
+      if (bgImage) {
+        targetCtx.save();
+        targetCtx.globalAlpha = bgOpacity;
+        const imgW = (bgImage.width / PIXELS_PER_METER) * bgScale;
+        const imgH = (bgImage.height / PIXELS_PER_METER) * bgScale;
+        targetCtx.drawImage(bgImage, 0, 0, imgW, imgH);
+        targetCtx.restore();
+      }
+
+      // 2. Dibujar cuadrícula
+      if (showGrid && !isExport) {
+        drawGrid(targetCtx, w, h);
+      }
+
+      // 3. Dibujar áreas calculadas (fondo suave)
+      for (const el of elements) {
+        if (el.type === 'area') drawArea(targetCtx, el, el.id === selectedId && !isExport);
+      }
+
+      // 4. Dibujar muros
+      for (const el of elements) {
+        if (el.type === 'wall') drawWall(targetCtx, el, el.id === selectedId && !isExport);
+      }
+
+      // 5. Dibujar puertas y ventanas
+      for (const el of elements) {
+        if (el.type === 'door') drawDoor(targetCtx, el, el.id === selectedId && !isExport);
+        if (el.type === 'window') drawWindow(targetCtx, el, el.id === selectedId && !isExport);
+      }
+
+      // 6. Dibujar cotas, textos y señalización
+      for (const el of elements) {
+        if (el.type === 'dimension') drawDimension(targetCtx, el, el.id === selectedId && !isExport);
+        if (el.type === 'text') drawText(targetCtx, el, el.id === selectedId && !isExport);
+        if (el.type.startsWith('sig_')) drawSignal(targetCtx, el, el.id === selectedId && !isExport);
+      }
+
+      // 7. Previsualización de dibujo en curso
+      if (!isExport) {
+        if (isDrawing && startPt && currentPt) {
+          if (currentTool === 'wall') {
+            const thick = parseFloat(document.getElementById('wall-thickness').value) || 0.15;
+            drawWall(targetCtx, { x1: startPt.x, y1: startPt.y, x2: currentPt.x, y2: currentPt.y, thickness: thick }, false, true);
+          } else if (currentTool === 'dimension') {
+            drawDimension(targetCtx, { x1: startPt.x, y1: startPt.y, x2: currentPt.x, y2: currentPt.y }, false, true);
+          }
+        }
+
+        // Polígono de área en construcción
+        if (currentTool === 'area' && areaPoints.length > 0) {
+          targetCtx.save();
+          targetCtx.strokeStyle = '#10b981';
+          targetCtx.lineWidth = 2 / (PIXELS_PER_METER * camera.zoom);
+          targetCtx.setLineDash([0.1, 0.1]);
+          targetCtx.beginPath();
+          targetCtx.moveTo(areaPoints[0].x, areaPoints[0].y);
+          for (let i = 1; i < areaPoints.length; i++) {
+            targetCtx.lineTo(areaPoints[i].x, areaPoints[i].y);
+          }
+          if (currentPt) targetCtx.lineTo(currentPt.x, currentPt.y);
+          targetCtx.stroke();
+          targetCtx.restore();
+        }
+
+        // Indicador de cursor / imán
+        if (currentPt) {
+          targetCtx.save();
+          targetCtx.fillStyle = currentPt.snappedToVertex ? '#10b981' : '#3b82f6';
+          targetCtx.beginPath();
+          targetCtx.arc(currentPt.x, currentPt.y, 4 / (PIXELS_PER_METER * camera.zoom), 0, Math.PI * 2);
+          targetCtx.fill();
+          targetCtx.restore();
+        }
+      }
+
+      targetCtx.restore();
+
+      // Cajetín técnico si se está exportando PNG
+      if (isExport) {
+        drawTitleBlock(targetCtx, w, h);
+      }
+    }
+
+    function drawGrid(c, w, h) {
+      const topLeft = screenToWorld(0, 0);
+      const bottomRight = screenToWorld(w, h);
+      const step = gridStepMeters;
+
+      const startX = Math.floor(topLeft.x / step) * step;
+      const endX = Math.ceil(bottomRight.x / step) * step;
+      const startY = Math.floor(topLeft.y / step) * step;
+      const endY = Math.ceil(bottomRight.y / step) * step;
+
+      c.lineWidth = 1 / (PIXELS_PER_METER * camera.zoom);
+
+      for (let x = startX; x <= endX; x += step) {
+        const isMajor = Math.abs(Math.round(x) - x) < 0.001;
+        c.strokeStyle = isMajor ? '#d1d5db' : '#f1f5f9';
+        c.beginPath();
+        c.moveTo(x, startY);
+        c.lineTo(x, endY);
+        c.stroke();
+      }
+
+      for (let y = startY; y <= endY; y += step) {
+        const isMajor = Math.abs(Math.round(y) - y) < 0.001;
+        c.strokeStyle = isMajor ? '#d1d5db' : '#f1f5f9';
+        c.beginPath();
+        c.moveTo(startX, y);
+        c.lineTo(endX, y);
+        c.stroke();
+      }
+    }
+
+    function drawWall(c, el, isSelected, isPreview = false) {
+      c.save();
+      c.strokeStyle = isSelected ? '#3b82f6' : (isPreview ? 'rgba(59, 130, 246, 0.7)' : '#1e293b');
+      c.lineWidth = el.thickness || 0.15;
+      c.lineCap = 'square';
+      c.beginPath();
+      c.moveTo(el.x1, el.y1);
+      c.lineTo(el.x2, el.y2);
+      c.stroke();
+
+      // Mostrar medida en vivo mientras se dibuja
+      if (isPreview) {
+        const len = Math.hypot(el.x2 - el.x1, el.y2 - el.y1);
+        if (len > 0.05) {
+          const midX = (el.x1 + el.x2) / 2;
+          const midY = (el.y1 + el.y2) / 2;
+          drawBadgeText(c, `${len.toFixed(2)} m`, midX, midY - 0.25, '#2563eb');
+        }
+      }
+      c.restore();
+    }
+
+    function drawDoor(c, el, isSelected) {
+      const w = el.width || 0.9;
+      c.save();
+      c.translate(el.x1, el.y1);
+      c.rotate(el.angle || 0);
+
+      // Limpiar hueco en muro
+      c.fillStyle = '#ffffff';
+      c.fillRect(0, -0.12, w, 0.24);
+
+      // Hoja y arco de apertura
+      c.strokeStyle = isSelected ? '#3b82f6' : '#0f172a';
+      c.lineWidth = 0.03;
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(0, -w);
+      c.stroke();
+
+      c.setLineDash([0.05, 0.05]);
+      c.beginPath();
+      c.arc(0, 0, w, -Math.PI / 2, 0);
+      c.stroke();
+      c.restore();
+    }
+
+    function drawWindow(c, el, isSelected) {
+      const w = el.width || 1.2;
+      c.save();
+      c.translate(el.x1, el.y1);
+      c.rotate(el.angle || 0);
+
+      c.fillStyle = '#ffffff';
+      c.fillRect(0, -0.09, w, 0.18);
+
+      c.strokeStyle = isSelected ? '#3b82f6' : '#0284c7';
+      c.lineWidth = 0.025;
+      c.strokeRect(0, -0.07, w, 0.14);
+
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(w, 0);
+      c.stroke();
+      c.restore();
+    }
+
+    function drawDimension(c, el, isSelected, isPreview = false) {
+      const len = Math.hypot(el.x2 - el.x1, el.y2 - el.y1);
+      if (len < 0.02) return;
+
+      const angle = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
+      c.save();
+      c.strokeStyle = isSelected ? '#3b82f6' : (isPreview ? '#2563eb' : '#dc2626');
+      c.fillStyle = c.strokeStyle;
+      c.lineWidth = 0.02;
+
+      c.beginPath();
+      c.moveTo(el.x1, el.y1);
+      c.lineTo(el.x2, el.y2);
+      c.stroke();
+
+      // Marcas en los extremos
+      [ { x: el.x1, y: el.y1 }, { x: el.x2, y: el.y2 } ].forEach(pt => {
+        c.save();
+        c.translate(pt.x, pt.y);
+        c.rotate(angle);
+        c.beginPath();
+        c.moveTo(0, -0.1);
+        c.lineTo(0, 0.1);
+        c.stroke();
+        c.restore();
+      });
+
+      const midX = (el.x1 + el.x2) / 2;
+      const midY = (el.y1 + el.y2) / 2;
+      drawBadgeText(c, `${len.toFixed(2)} m`, midX, midY - 0.18, isSelected ? '#3b82f6' : '#dc2626');
+      c.restore();
+    }
+
+    function drawText(c, el, isSelected) {
+      c.save();
+      const fontSize = 0.24;
+      c.font = `bold ${fontSize}px sans-serif`;
+      c.fillStyle = isSelected ? '#3b82f6' : '#1e293b';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(el.text || 'Ambiente', el.x1, el.y1);
+      c.restore();
+    }
+
+    function drawArea(c, el, isSelected) {
+      if (!el.points || el.points.length < 3) return;
+      c.save();
+      c.fillStyle = isSelected ? 'rgba(59, 130, 246, 0.2)' : 'rgba(16, 185, 129, 0.12)';
+      c.strokeStyle = isSelected ? '#3b82f6' : 'rgba(16, 185, 129, 0.6)';
+      c.lineWidth = 0.02;
+
+      c.beginPath();
+      c.moveTo(el.points[0].x, el.points[0].y);
+      for (let i = 1; i < el.points.length; i++) {
+        c.lineTo(el.points[i].x, el.points[i].y);
+      }
+      c.closePath();
+      c.fill();
+      c.stroke();
+
+      // Centroide para etiqueta de m²
+      let cx = 0, cy = 0;
+      el.points.forEach(p => { cx += p.x; cy += p.y; });
+      cx /= el.points.length;
+      cy /= el.points.length;
+
+      const area = calcPolygonArea(el.points);
+      drawBadgeText(c, `${el.text || 'Área'}: ${area.toFixed(2)} m²`, cx, cy, '#059669');
+      c.restore();
+    }
+
+    function drawSignal(c, el, isSelected) {
+      c.save();
+      c.translate(el.x1, el.y1);
+      const r = 0.22;
+
+      if (isSelected) {
+        c.strokeStyle = '#3b82f6';
+        c.lineWidth = 0.04;
+        c.strokeRect(-r - 0.06, -r - 0.06, (r + 0.06) * 2, (r + 0.06) * 2);
+      }
+
+      if (el.type === 'sig_elec') {
+        // Tablero eléctrico (rectángulo amarillo/naranja con rayo)
+        c.fillStyle = '#facc15';
+        c.strokeStyle = '#000000';
+        c.lineWidth = 0.025;
+        c.fillRect(-r, -r * 0.75, r * 2, r * 1.5);
+        c.strokeRect(-r, -r * 0.75, r * 2, r * 1.5);
+        c.fillStyle = '#000';
+        c.font = 'bold 0.22px sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText('⚡', 0, 0.02);
+      } else if (el.type === 'sig_ext') {
+        // Extintor (cuadrado rojo)
+        c.fillStyle = '#dc2626';
+        c.fillRect(-r, -r, r * 2, r * 2);
+        c.fillStyle = '#fff';
+        c.font = 'bold 0.16px sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText('EXT', 0, 0);
+      } else if (el.type === 'sig_light') {
+        // Luz de emergencia (verde)
+        c.fillStyle = '#16a34a';
+        c.fillRect(-r * 1.1, -r * 0.65, r * 2.2, r * 1.3);
+        c.fillStyle = '#fff';
+        c.font = 'bold 0.14px sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText('LUZ EM', 0, 0);
+      } else if (el.type === 'sig_smoke') {
+        // Detector de humo (círculo blanco con borde azul/rojo)
+        c.fillStyle = '#ffffff';
+        c.strokeStyle = '#2563eb';
+        c.lineWidth = 0.03;
+        c.beginPath();
+        c.arc(0, 0, r * 0.85, 0, Math.PI * 2);
+        c.fill();
+        c.stroke();
+        c.fillStyle = '#1e293b';
+        c.font = 'bold 0.15px sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText('DH', 0, 0);
+      }
+      c.restore();
+    }
+
+    function drawBadgeText(c, text, x, y, bgColor) {
+      c.save();
+      const fontSize = 0.18;
+      c.font = `bold ${fontSize}px sans-serif`;
+      const metrics = c.measureText(text);
+      const padX = 0.08;
+      const padY = 0.05;
+      const boxW = metrics.width + padX * 2;
+      const boxH = fontSize + padY * 2;
+
+      c.fillStyle = bgColor;
+      c.fillRect(x - boxW / 2, y - boxH / 2, boxW, boxH);
+
+      c.fillStyle = '#ffffff';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(text, x, y);
+      c.restore();
+    }
+
+    function drawTitleBlock(c, w, h) {
+      const title = document.getElementById('project-title').value || 'Plano Arquitectónico';
+      const totalArea = document.getElementById('total-area').textContent;
+      const dateStr = new Date().toLocaleDateString();
+
+      c.save();
+      c.fillStyle = '#f8fafc';
+      c.strokeStyle = '#1e293b';
+      c.lineWidth = 2;
+      const boxW = 360;
+      const boxH = 75;
+      const bx = w - boxW - 20;
+      const by = h - boxH - 20;
+
+      c.fillRect(bx, by, boxW, boxH);
+      c.strokeRect(bx, by, boxW, boxH);
+
+      c.fillStyle = '#0f172a';
+      c.font = 'bold 15px sans-serif';
+      c.fillText(title, bx + 14, by + 26);
+
+      c.font = '12px sans-serif';
+      c.fillStyle = '#475569';
+      c.fillText(`Superficie Total: ${totalArea}  |  Fecha: ${dateStr}`, bx + 14, by + 52);
+      c.restore();
+    }
+
+    // Interacción con el ratón
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+
+      // Clic central o herramienta mover vista
+      if (e.button === 1 || currentTool === 'pan') {
+        isPanning = true;
+        panStart = { x: sx - camera.x, y: sy - camera.y };
+        return;
+      }
+
+      if (e.button !== 0) return;
+
+      const rawWorld = screenToWorld(sx, sy);
+      const pt = getSnappedPoint(rawWorld, isDrawing ? startPt : null);
+
+      if (currentTool === 'select') {
+        selectedId = findElementAt(rawWorld);
+        updateSelectionPanel();
+        render();
+        return;
+      }
+
+      if (currentTool === 'wall' || currentTool === 'dimension') {
+        if (!isDrawing) {
+          isDrawing = true;
+          startPt = pt;
+          currentPt = pt;
+        } else {
+          const dist = Math.hypot(pt.x - startPt.x, pt.y - startPt.y);
+          if (dist > 0.05) {
+            saveState();
+            elements.push({
+              id: Date.now() + Math.random(),
+              type: currentTool,
+              x1: startPt.x,
+              y1: startPt.y,
+              x2: pt.x,
+              y2: pt.y,
+              thickness: parseFloat(document.getElementById('wall-thickness').value) || 0.15
+            });
+            // Encadenar muro siguiente automáticamente
+            if (currentTool === 'wall') {
+              startPt = pt;
+            } else {
+              isDrawing = false;
+              startPt = null;
+            }
+          }
+        }
+        render();
+        return;
+      }
+
+      if (currentTool === 'door' || currentTool === 'window') {
+        saveState();
+        const w = parseFloat(document.getElementById('opening-width').value) || (currentTool === 'door' ? 0.9 : 1.2);
+        elements.push({
+          id: Date.now() + Math.random(),
+          type: currentTool,
+          x1: pt.x,
+          y1: pt.y,
+          width: w,
+          angle: 0
+        });
+        render();
+        return;
+      }
+
+      if (currentTool === 'text') {
+        const label = prompt('Escribe el nombre del ambiente o etiqueta:', 'Dormitorio');
+        if (label && label.trim() !== '') {
+          saveState();
+          elements.push({
+            id: Date.now() + Math.random(),
+            type: 'text',
+            x1: pt.x,
+            y1: pt.y,
+            text: label.trim()
+          });
+          render();
+        }
+        return;
+      }
+
+      if (currentTool.startsWith('sig_')) {
+        saveState();
+        elements.push({
+          id: Date.now() + Math.random(),
+          type: currentTool,
+          x1: pt.x,
+          y1: pt.y
+        });
+        render();
+        return;
+      }
+
+      if (currentTool === 'area') {
+        // Si hace clic cerca del primer punto y hay al menos 3 puntos, cerrar polígono
+        if (areaPoints.length >= 3) {
+          const d0 = Math.hypot(pt.x - areaPoints[0].x, pt.y - areaPoints[0].y);
+          if (d0 < 0.25) {
+            const roomName = prompt('Nombre de este ambiente:', `Ambiente ${elements.filter(el => el.type === 'area').length + 1}`) || 'Ambiente';
+            saveState();
+            elements.push({
+              id: Date.now() + Math.random(),
+              type: 'area',
+              points: [...areaPoints],
+              text: roomName
+            });
+            areaPoints = [];
+            updateAreaPanel();
+            render();
+            return;
+          }
+        }
+        areaPoints.push({ x: pt.x, y: pt.y });
+        render();
+      }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+
+      if (isPanning) {
+        camera.x = sx - panStart.x;
+        camera.y = sy - panStart.y;
+        render();
+        return;
+      }
+
+      const rawWorld = screenToWorld(sx, sy);
+      const ref = isDrawing ? startPt : (areaPoints.length > 0 ? areaPoints[areaPoints.length - 1] : null);
+      currentPt = getSnappedPoint(rawWorld, ref);
+
+      document.getElementById('coords-display').textContent = `X: ${currentPt.x.toFixed(2)} m | Y: ${currentPt.y.toFixed(2)} m`;
+      render();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isPanning = false;
+    });
+
+    // Zoom con rueda del ratón
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+
+      const worldBefore = screenToWorld(sx, sy);
+      const factor = e.deltaY < 0 ? 1.12 : 0.89;
+      camera.zoom = Math.min(Math.max(camera.zoom * factor, 0.2), 6);
+
+      camera.x = sx - worldBefore.x * PIXELS_PER_METER * camera.zoom;
+      camera.y = sy - worldBefore.y * PIXELS_PER_METER * camera.zoom;
+      render();
+    }, { passive: false });
+
+    // Buscar elemento al hacer clic con Seleccionar
+    function findElementAt(pt) {
+      for (let i = elements.length - 1; i >= 0; i--) {
+        const el = elements[i];
+        if (el.type === 'wall' || el.type === 'dimension') {
+          const d = distToSegment(pt, { x: el.x1, y: el.y1 }, { x: el.x2, y: el.y2 });
+          if (d < 0.25) return el.id;
+        } else if (el.type === 'area') {
+          if (pointInPolygon(pt, el.points)) return el.id;
+        } else {
+          const d = Math.hypot(pt.x - el.x1, pt.y - el.y1);
+          if (d < 0.45) return el.id;
+        }
+      }
+      return null;
+    }
+
+    function distToSegment(p, v, w) {
+      const l2 = (v.x - w.x) ** 2 + (v.y - w.y) ** 2;
+      if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+      let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+    }
+
+    function pointInPolygon(pt, vs) {
+      let inside = false;
+      for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        const xi = vs[i].x, yi = vs[i].y;
+        const xj = vs[j].x, yj = vs[j].y;
+        const intersect = ((yi > pt.y) !== (yj > pt.y)) && (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
+    // Actualizar paneles laterales
+    function updateSelectionPanel() {
+      const panel = document.getElementById('selection-controls');
+      panel.style.display = selectedId ? 'block' : 'none';
+    }
+
+    function updateAreaPanel() {
+      const list = document.getElementById('area-list');
+      const areas = elements.filter(el => el.type === 'area');
+      if (areas.length === 0) {
+        list.innerHTML = '<div style="font-size:11px; color:var(--text-muted);">Usa "Medir Área m²" y haz clic en las esquinas de una habitación para calcular su superficie.</div>';
+        document.getElementById('total-area').textContent = '0.00 m²';
+        return;
+      }
+      let total = 0;
+      list.innerHTML = '';
+      areas.forEach(a => {
+        const m2 = calcPolygonArea(a.points);
+        total += m2;
+        const div = document.createElement('div');
+        div.className = 'area-item';
+        div.innerHTML = `<span>${a.text}</span><span class="area-badge">${m2.toFixed(2)} m²</span>`;
+        list.appendChild(div);
+      });
+      document.getElementById('total-area').textContent = `${total.toFixed(2)} m²`;
+    }
+
+    // Controles de herramientas
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTool = btn.dataset.tool;
+        isDrawing = false;
+        startPt = null;
+        areaPoints = [];
+        updateHint();
+        render();
+      });
+    });
+
+    function updateHint() {
+      const hints = {
+        select: 'Haz clic sobre cualquier pared, puerta, símbolo o área para seleccionarlo, rotarlo (R) o borrarlo (Supr).',
+        wall: 'Haz clic para iniciar pared recta (90°). Mantén <b>Shift</b> para ángulo libre o <b>Esc</b> para soltar.',
+        door: 'Haz clic en el plano para colocar una puerta. Luego puedes rotarla con la tecla <b>R</b>.',
+        window: 'Haz clic en el plano para colocar una ventana. Luego puedes rotarla con la tecla <b>R</b>.',
+        dimension: 'Haz clic en el punto inicial y luego en el punto final para acotar una medida.',
+        text: 'Haz clic donde quieras agregar el nombre de una habitación o nota.',
+        area: 'Haz clic en cada esquina de la habitación y vuelve al primer punto para cerrar y calcular m².',
+        pan: 'Arrastra con el ratón para desplazarte por el plano.',
+        sig_elec: 'Haz clic para ubicar un Tablero Eléctrico.',
+        sig_ext: 'Haz clic para ubicar un Extintor.',
+        sig_light: 'Haz clic para ubicar una Luz de Emergencia.',
+        sig_smoke: 'Haz clic para ubicar un Detector de Humo.'
+      };
+      document.getElementById('hint-box').innerHTML = hints[currentTool] || '';
+    }
+
+    // Botones superiores
+    const btnOrtho = document.getElementById('btn-ortho');
+    btnOrtho.addEventListener('click', () => {
+      orthoMode = !orthoMode;
+      btnOrtho.textContent = `📏 Ortho 90°: ${orthoMode ? 'ON' : 'OFF'}`;
+      btnOrtho.className = orthoMode ? 'ortho-active' : '';
+    });
+
+    const btnSnap = document.getElementById('btn-snap');
+    btnSnap.addEventListener('click', () => {
+      snapMode = !snapMode;
+      btnSnap.textContent = `🧲 Imán: ${snapMode ? 'ON' : 'OFF'}`;
+      btnSnap.classList.toggle('active', snapMode);
+    });
+
+    const btnGrid = document.getElementById('btn-grid');
+    btnGrid.addEventListener('click', () => {
+      showGrid = !showGrid;
+      btnGrid.classList.toggle('active', showGrid);
+      render();
+    });
+
+    document.getElementById('grid-size').addEventListener('change', (e) => {
+      gridStepMeters = parseFloat(e.target.value);
+      render();
+    });
+
+    document.getElementById('btn-undo').addEventListener('click', undo);
+    document.getElementById('btn-redo').addEventListener('click', redo);
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      if (confirm('¿Seguro que deseas borrar todo el plano?')) {
+        saveState();
+        elements = [];
+        selectedId = null;
+        updateSelectionPanel();
+        updateAreaPanel();
+        render();
+      }
+    });
+
+    // Rotar y eliminar seleccionado
+    function rotateSelected() {
+      if (!selectedId) return;
+      const el = elements.find(item => item.id === selectedId);
+      if (el && (el.type === 'door' || el.type === 'window')) {
+        saveState();
+        el.angle = ((el.angle || 0) + Math.PI / 2) % (Math.PI * 2);
+        render();
+      }
+    }
+
+    function deleteSelected() {
+      if (!selectedId) return;
+      saveState();
+      elements = elements.filter(item => item.id !== selectedId);
+      selectedId = null;
+      updateSelectionPanel();
+      updateAreaPanel();
+      render();
+    }
+
+    document.getElementById('btn-rotate-sel').addEventListener('click', rotateSelected);
+    document.getElementById('btn-delete-sel').addEventListener('click', deleteSelected);
+
+    // Atajos de teclado
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.key === 'Shift') shiftPressed = true;
+      if (e.key === 'F8') {
+        e.preventDefault();
+        btnOrtho.click();
+      }
+      if (e.key === 'Escape') {
+        isDrawing = false;
+        startPt = null;
+        areaPoints = [];
+        selectedId = null;
+        updateSelectionPanel();
+        render();
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
+      if (e.key.toLowerCase() === 'r') rotateSelected();
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'Shift') shiftPressed = false;
+    });
+
+    // Cargar boceto de referencia
+    document.getElementById('btn-upload-bg').addEventListener('click', () => {
+      document.getElementBy
